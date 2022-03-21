@@ -1,0 +1,33 @@
+{
+  "name": "eftec/auth-one",
+  "type": "library",
+  "require": {
+    "php": ">=7.2.5",
+    "eftec/pdoone": "^2.32",
+    "eftec/documentstoreone": "^1.23",
+    "ext-json": "*",
+    "eftec/cacheone": "^2.11"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5.19"
+  },
+  "license": "lgpl",
+  "autoload": {
+    "psr-4": {
+      "eftec\\authone\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "eftec\\tests\\": "tests/",
+      "api\\": "",
+      "examples\\": "examples/"
+    }
+  },
+  "authors": [
+    {
+      "name": "jorgecc",
+      "email": "jcastro@eftec.cl"
+    }
+  ]
+}
