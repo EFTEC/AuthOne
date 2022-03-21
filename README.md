@@ -24,7 +24,7 @@ Type of Authentication (how the authentication will work)
 - [x] A JWT-like token bearer.
 
 
-| PHP Session                        | User and Password  | Token                    | JWT                  |
+| PHP Session                        | User and Password  | Token                    | JWTLITE              |
 |------------------------------------|--------------------|--------------------------|----------------------|
 | ![phpsession](docs/phpsession.png) | ![up](docs/up.png) | ![token](docs/token.png) | ![jwt](docs/jwt.png) |
 
@@ -160,7 +160,7 @@ Features enabled
 - [ ] Time to Live (TTL)
 - [ ] Invalidation
 
-### JWT token Bearer
+### JWTlite token Bearer
 
 ![jwt](docs/jwt.png)
 

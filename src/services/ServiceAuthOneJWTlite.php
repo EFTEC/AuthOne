@@ -6,7 +6,11 @@ use eftec\authone\AuthOne;
 use PHPUnit\Exception;
 use RuntimeException;
 
-class ServiceAuthOneJWT implements IServiceAuthOne
+/**
+ * @copyright (c) Jorge Castro C. Dual Licence: LGPL and Commercial License  https://github.com/EFTEC/AuthOne
+ * @version       0.86
+ */
+class ServiceAuthOneJWTlite implements IServiceAuthOne
 {
     /** @var AuthOne */
     protected $parent;

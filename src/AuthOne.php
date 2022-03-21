@@ -4,7 +4,7 @@ namespace eftec\authone;
 
 use eftec\authone\services\IServiceAuthOne;
 use eftec\authone\services\IServiceAuthOneStore;
-use eftec\authone\services\ServiceAuthOneJWT;
+use eftec\authone\services\ServiceAuthOneJWTlite;
 use eftec\authone\services\ServiceAuthOneSession;
 use eftec\authone\services\ServiceAuthOneStoreToken;
 use eftec\authone\services\ServiceAuthOneStoreDocument;
@@ -25,11 +25,11 @@ use RuntimeException;
  * @package       eftec
  * @author        Jorge Castro Castillo
  * @copyright (c) Jorge Castro C. Dual Licence: LGPL and Commercial License  https://github.com/EFTEC/AuthOne
- * @version       0.85
+ * @version       0.86
  */
 class AuthOne
 {
-    public const VERSION = "0.85";
+    public const VERSION = "0.86";
     /**
      * @var int The max lenght of the user, password, token (no token bearer), it helps to avoid overflow<br>
      *          The field "enabled" is always up to 32 characters.
@@ -58,7 +58,7 @@ class AuthOne
     public $encEnabled = true;
     public $hashType = 'sha256';
     public $encSalt = '123'; // note: you must change this value
-    /** @var string=['session','token','userpwd','jwt'][$i] */
+    /** @var string=['session','token','userpwd','jwtlite'][$i] */
     public $authType;
     /** @var string=['pdo','document','token'][$i] */
     public $storeType;
@@ -72,7 +72,7 @@ class AuthOne
     public $configTokenStore;
 
     /**
-     * @param string     $authType         =['session','token','userpwd','jwt'][$i] The type of authentication<br>
+     * @param string     $authType         =['session','token','userpwd','jwtlite'][$i] The type of authentication<br>
      *                                     <b>session</b>: PHP session<br>
      *                                     <b>token</b>: Token<br>
      *                                     <b>userpwd</b>: User and password<br>
@@ -107,8 +107,8 @@ class AuthOne
             case 'userpwd':
                 $this->serviceAuth = new ServiceAuthOneUserPwd($this);
                 break;
-            case 'jwt':
-                $this->serviceAuth = new ServiceAuthOneJWT($this);
+            case 'jwtlite':
+                $this->serviceAuth = new ServiceAuthOneJWTlite($this);
                 break;
             default:
                 throw new RuntimeException('AuthOne: authType incorrect');
@@ -425,11 +425,11 @@ class AuthOne
     public function validateAuth($auth, ?string $PasswordOrCrc = null): ?array
     {
         $authString = is_string($auth) ? $auth : json_encode($auth);
-        if ($this->authType === 'jwt' && strlen($authString) > $this->MAXLENGHTOBJECT) {
+        if ($this->authType === 'jwtlite' && strlen($authString) > $this->MAXLENGHTOBJECT) {
             // auth too big
             return null;
         }
-        if ($this->authType !== 'jwt' && strlen($authString) > $this->MAXLENGHT) {
+        if ($this->authType !== 'jwtlite' && strlen($authString) > $this->MAXLENGHT) {
             // auth too big
             return null;
         }
@@ -465,11 +465,11 @@ class AuthOne
     public function renewAuth($auth, ?string $PasswordOrCrc = null, int $ttl = 0): ?array
     {
         $authString = is_string($auth) ? $auth : json_encode($auth);
-        if ($this->authType === 'jwt' && strlen($authString) > $this->MAXLENGHTOBJECT) {
+        if ($this->authType === 'jwtlite' && strlen($authString) > $this->MAXLENGHTOBJECT) {
             // auth too big
             return null;
         }
-        if ($this->authType !== 'jwt' && strlen($authString) > $this->MAXLENGHT) {
+        if ($this->authType !== 'jwtlite' && strlen($authString) > $this->MAXLENGHT) {
             // auth too big
             return null;
         }
@@ -496,11 +496,11 @@ class AuthOne
      */
     public function invalidateAuth(string $auth): bool
     {
-        if ($this->authType === 'jwt' && strlen($auth) > $this->MAXLENGHTOBJECT) {
+        if ($this->authType === 'jwtlite' && strlen($auth) > $this->MAXLENGHTOBJECT) {
             // auth too big
             return false;
         }
-        if ($this->authType !== 'jwt' && strlen($auth) > $this->MAXLENGHT) {
+        if ($this->authType !== 'jwtlite' && strlen($auth) > $this->MAXLENGHT) {
             // auth too big
             return false;
         }

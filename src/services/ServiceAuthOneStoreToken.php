@@ -7,6 +7,10 @@ use eftec\CacheOne;
 use Exception;
 use RuntimeException;
 
+/**
+ * @copyright (c) Jorge Castro C. Dual Licence: LGPL and Commercial License  https://github.com/EFTEC/AuthOne
+ * @version       0.86
+ */
 class ServiceAuthOneStoreToken implements IServiceAuthOneStore
 {
     /** @var AuthOne */

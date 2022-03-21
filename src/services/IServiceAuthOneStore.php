@@ -1,6 +1,11 @@
 <?php
 
 namespace eftec\authone\services;
+
+/**
+ * @copyright (c) Jorge Castro C. Dual Licence: LGPL and Commercial License  https://github.com/EFTEC/AuthOne
+ * @version       1.0
+ */
 interface IServiceAuthOneStore
 {
     public function getInstance() : object;

@@ -7,6 +7,10 @@ use eftec\DocumentStoreOne\DocumentStoreOne;
 use Exception;
 use RuntimeException;
 
+/**
+ * @copyright (c) Jorge Castro C. Dual Licence: LGPL and Commercial License  https://github.com/EFTEC/AuthOne
+ * @version       0.86
+ */
 class ServiceAuthOneStoreDocument implements IServiceAuthOneStore
 {
     /** @var AuthOne */

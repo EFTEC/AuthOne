@@ -206,7 +206,7 @@ class AuthOneTest extends TestCase
 
     public function testPdoJWT(): void
     {
-        $this->auth = new AuthOne('jwt', 'pdo', $this->pdoConfig);
+        $this->auth = new AuthOne('jwtlite', 'pdo', $this->pdoConfig);
         $this->auth->setUserStoreConfig('mytable', 'myuser', 'mypassword', 'myenable');
         $this->auth->deleteUser($this->userObj['myuser']);
         $this->assertEquals($this->userTemplate, $this->auth->addUser($this->userObj));
