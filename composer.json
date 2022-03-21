@@ -1,5 +1,5 @@
 {
-  "name": "eftec/auth-one",
+  "name": "eftec/authone",
   "type": "library",
   "require": {
     "php": ">=7.2.5",
