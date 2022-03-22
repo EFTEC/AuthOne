@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpFullyQualifiedNameUsageInspection */
 
 namespace eftec\authone;
 
@@ -12,8 +12,6 @@ use eftec\authone\services\ServiceAuthOneStorePdo;
 use eftec\authone\services\ServiceAuthOneToken;
 use eftec\authone\services\ServiceAuthOneUserPwd;
 use eftec\CacheOne;
-use eftec\DocumentStoreOne\DocumentStoreOne;
-use eftec\PdoOne;
 use Exception;
 use RuntimeException;
 
@@ -25,11 +23,11 @@ use RuntimeException;
  * @package       eftec
  * @author        Jorge Castro Castillo
  * @copyright (c) Jorge Castro C. Dual Licence: LGPL and Commercial License  https://github.com/EFTEC/AuthOne
- * @version       0.87
+ * @version       0.92
  */
 class AuthOne
 {
-    public const VERSION = "0.87";
+    public const VERSION = "0.92";
     /**
      * @var int The max lenght of the user, password, token (no token bearer), it helps to avoid overflow<br>
      *          The field "enabled" is always up to 32 characters.
@@ -87,6 +85,7 @@ class AuthOne
      *                                     If null, then it will try to inject an instance<br>
      * @param array|null $configTokenStore The configuration of the token store (used by "token")<br>
      *                                     If null, then it will try to inject an instance<br>
+     * @noinspection PhpFullyQualifiedNameUsageInspection
      */
     public function __construct(string $authType,
                                 string $storeType,
@@ -115,17 +114,27 @@ class AuthOne
         }
         switch ($storeType) {
             case 'pdo':
+                /** @noinspection ClassConstantCanBeUsedInspection */
+                if (!class_exists('eftec\\PdoOne')) {
+                    throw new RuntimeException('AuthOne: Library eftec\\PdoOne not found or not loaded.
+                    Did you add it to the composer? composer add eftec\\pdoone');
+                }
                 if($this->configUserStore===null) {
                     // auto wire the instance
-                    $this->serviceUserStore = PdoOne::instance(true);
+                    $this->serviceUserStore = \eftec\PdoOne::instance(true);
                 } else {
                     $this->serviceUserStore = new ServiceAuthOneStorePdo($this, $this->configUserStore);
                 }
                 break;
             case 'document':
+                /** @noinspection ClassConstantCanBeUsedInspection */
+                if (!class_exists('eftec\\DocumentStoreOne\\DocumentStoreOne')) {
+                    throw new RuntimeException('AuthOne: Library eftec\\DocumentStoreOne not found or not loaded.
+                     Did you add it to the composer? composer add eftec\\documentstoreone');
+                }
                 if($this->configUserStore===null) {
                     // auto wire the instance
-                    $this->serviceUserStore = DocumentStoreOne::instance(true);
+                    $this->serviceUserStore = \eftec\DocumentStoreOne\DocumentStoreOne::instance(true);
                 } else {
                     $this->serviceUserStore = new ServiceAuthOneStoreDocument($this, $this->configUserStore);
                 }
@@ -211,7 +220,7 @@ class AuthOne
         $result = [];
         try {
             if ($this->storeType === 'pdo') {
-                /** @var PdoOne $instance */
+                /** @var \eftec\PdoOne $instance */
                 $instance = $this->serviceUserStore->getInstance();
                 $definitions = [];
                 $definitions[] = $this->fieldUser . ' string(' . $this->MAXLENGHT . ')';
@@ -233,7 +242,7 @@ class AuthOne
         }
         if ($this->serviceTokenStore !== null) {
             if ($this->serviceTokenStore->type === 'pdoone') {
-                /** @var PdoOne $instance */
+                /** @var \eftec\PdoOne $instance */
                 $instance = $this->serviceTokenStore->service->getInstance();
                 $instance->setKvDefaultTable($this->tableToken);
                 try {
@@ -246,7 +255,7 @@ class AuthOne
                 }
             }
             if ($this->serviceTokenStore->type === 'documentone') {
-                /** @var DocumentStoreOne $instance */
+                /** @var \eftec\DocumentStoreOne\DocumentStoreOne $instance */
                 $instance = $this->serviceTokenStore->service->getInstance();
                 try {
                     $r = $instance->createCollection($this->tableToken);

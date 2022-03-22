@@ -4,6 +4,9 @@ use eftec\authone\AuthOne;
 
 include '../../vendor/autoload.php';
 
+var_dump(\eftec\DocumentStoreOne\DocumentStoreOne::class);
+die(1);
+
 //  $database, string $server, string $user, string $pwd, string $db = ''
 
 $pdoConfig=['databaseType'=>'mysql','server'=>'127.0.0.1','user'=>'root','pwd'=>'abc.123','db'=>'sakila'];

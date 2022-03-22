@@ -3,12 +3,12 @@
   "type": "library",
   "require": {
     "php": ">=7.2.5",
-    "eftec/pdoone": "^2.32",
-    "eftec/documentstoreone": "^1.23",
     "ext-json": "*",
     "eftec/cacheone": "^2.11"
   },
   "require-dev": {
+    "eftec/pdoone": "^2.32",
+    "eftec/documentstoreone": "^1.23",
     "phpunit/phpunit": "^9.5.19"
   },
   "license": "LGPL-3.0-or-later",

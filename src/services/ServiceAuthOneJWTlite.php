@@ -3,12 +3,12 @@
 namespace eftec\authone\services;
 
 use eftec\authone\AuthOne;
-use PHPUnit\Exception;
+use Exception;
 use RuntimeException;
 
 /**
  * @copyright (c) Jorge Castro C. Dual Licence: LGPL and Commercial License  https://github.com/EFTEC/AuthOne
- * @version       0.86
+ * @version       0.87
  */
 class ServiceAuthOneJWTlite implements IServiceAuthOne
 {
@@ -41,7 +41,6 @@ class ServiceAuthOneJWTlite implements IServiceAuthOne
 
     /**
      * @inheritDoc
-     * @noinspection PhpRedundantCatchClauseInspection
      */
     public function validate(string $auth, ?string $passwordOrCRC = null)
     {
