@@ -1,6 +1,6 @@
 # AuthOne
 
-This library is a simple authentication system that allow different types of Authentication.
+This minimalist library is a simple authentication system that allow different types of Authentication.
  
 
 [![Packagist](https://img.shields.io/packagist/v/eftec/AuthOne.svg)](https://packagist.org/packages/eftec/AuthOne)

@@ -1,5 +1,6 @@
 {
   "name": "eftec/authone",
+  "description": "Minimalist library for authentication",
   "type": "library",
   "require": {
     "php": ">=7.2.5",

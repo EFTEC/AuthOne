@@ -85,7 +85,6 @@ class AuthOne
      *                                     If null, then it will try to inject an instance<br>
      * @param array|null $configTokenStore The configuration of the token store (used by "token")<br>
      *                                     If null, then it will try to inject an instance<br>
-     * @noinspection PhpFullyQualifiedNameUsageInspection
      */
     public function __construct(string $authType,
                                 string $storeType,
