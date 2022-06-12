@@ -27,7 +27,7 @@ use RuntimeException;
  */
 class AuthOne
 {
-    public const VERSION = "0.92";
+    public const VERSION = "1.0";
     /**
      * @var int The max lenght of the user, password, token (no token bearer), it helps to avoid overflow<br>
      *          The field "enabled" is always up to 32 characters.

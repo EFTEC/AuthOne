@@ -269,6 +269,7 @@ $tokenConfig=[ // it is required if you are using TOKEN.
 
 # Changelog
 
+* 1.00 2022-12-06 release version.
 * 0.92 2022-03-22 Changed dependencies, now PdoOne and DocumentStoreOne are optional dependencies.
 * 0.85 2022-03-21 first version (release candidate)
 * 0.1  2022-03-02 first version (alpha)
