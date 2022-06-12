@@ -10,10 +10,10 @@ include '../../vendor/autoload.php';
 
 $pdoConfig=['databaseType'=>'mysql','server'=>'127.0.0.1','user'=>'root','pwd'=>'abc.123','db'=>'sakila'];
 $tokenConfig = [
-    'type' => 'redis', // it will use redis to store the temporary tokens.
+    'type' => 'apcu', // it will use redis to store the temporary tokens.
     // Values allowed: auto (automatic),redis (redis) ,
     //memcache (memcache),apcu (PHP APCU),pdoone (database) and documentone (file system)
-    'server' => '127.0.0.1',  // the server of REDIS or PDO. For documentone it is the startup folder.
+    'server' => '',  // the server of REDIS or PDO. For documentone it is the startup folder.
     'schema' => '', // (optional), the schema or folder.
     'port' => 0, // (optional) the port, used by redis memcache or pdo
     'user' => '', // (optional) the user used by pdo
