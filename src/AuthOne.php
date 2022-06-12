@@ -23,7 +23,7 @@ use RuntimeException;
  * @package       eftec
  * @author        Jorge Castro Castillo
  * @copyright (c) Jorge Castro C. Dual Licence: LGPL and Commercial License  https://github.com/EFTEC/AuthOne
- * @version       0.92
+ * @version       1.0
  */
 class AuthOne
 {
@@ -70,6 +70,27 @@ class AuthOne
     public $configTokenStore;
 
     /**
+     * It creates and configures the instance<br>
+     * <b>Examples of configurations:</b><br>
+     * <pre>
+     * $this->redisConfig = [
+     *           'type' => 'redis', // it will use redis to store the temporary tokens.
+     *                              // Values allowed: auto (automatic),redis (redis) ,
+     *                              //memcache (memcache),apcu (PHP APCU),pdoone (database) and documentone (file system)
+     *           'server' => '127.0.0.1',  // the server of REDIS or PDO. For documentone it is the startup folder.
+     *           'schema' => '', // (optional), the schema or folder.
+     *           'port' => 0, // (optional) the port, used by redis memcache or pdo
+     *           'user' => '', // (optional) the user used by pdo
+     *           'password' => '' // (optional) the password used by pdo
+     *           ];
+     * $this->pdoConfig = [ // See PdoOne for more information.
+     *           'databaseType' => 'mysql',  // mysql,sqlsrv,oci,test
+     *           'server' => '127.0.0.1',  // the server of REDIS or PDO. For documentone it is the startup folder.
+     *           'user' => 'root', // (optional) the user used by pdo
+     *           'password' => 'abc123' // (optional) the password used by pdo
+     *           'db' => 'sakila', // (optional), the schema or folder.
+     *           ];
+     * </pre>
      * @param string     $authType         =['session','token','userpwd','jwtlite'][$i] The type of authentication<br>
      *                                     <b>session</b>: PHP session<br>
      *                                     <b>token</b>: Token<br>
@@ -83,7 +104,7 @@ class AuthOne
      *                                     redis,pdo,document,memcached and apcu<br>
      * @param array|null $configUserToken  The configuration of the user store<br>
      *                                     If null, then it will try to inject an instance<br>
-     * @param array|null $configTokenStore The configuration of the token store (used by "token")<br>
+     * @param array|null $configTokenStore The configuration of the token store (only used by "token")<br>
      *                                     If null, then it will try to inject an instance<br>
      */
     public function __construct(string $authType,
@@ -109,7 +130,7 @@ class AuthOne
                 $this->serviceAuth = new ServiceAuthOneJWTlite($this);
                 break;
             default:
-                throw new RuntimeException('AuthOne: authType incorrect');
+                throw new RuntimeException("AuthOne: authType [$authType] incorrect");
         }
         switch ($storeType) {
             case 'pdo':
@@ -120,7 +141,7 @@ class AuthOne
                 }
                 if($this->configUserStore===null) {
                     // auto wire the instance
-                    $this->serviceUserStore = \eftec\PdoOne::instance(true);
+                    $this->serviceUserStore = \eftec\PdoOne::instance();
                 } else {
                     $this->serviceUserStore = new ServiceAuthOneStorePdo($this, $this->configUserStore);
                 }
@@ -133,7 +154,7 @@ class AuthOne
                 }
                 if($this->configUserStore===null) {
                     // auto wire the instance
-                    $this->serviceUserStore = \eftec\DocumentStoreOne\DocumentStoreOne::instance(true);
+                    $this->serviceUserStore = \eftec\DocumentStoreOne\DocumentStoreOne::instance();
                 } else {
                     $this->serviceUserStore = new ServiceAuthOneStoreDocument($this, $this->configUserStore);
                 }
@@ -141,7 +162,7 @@ class AuthOne
             case 'token':
                 if($this->configUserStore===null) {
                     // auto wire the instance
-                    $this->serviceUserStore =CacheOne::instance(true);
+                    $this->serviceUserStore =CacheOne::instance();
                 } else {
                     $this->serviceUserStore = new ServiceAuthOneStoreToken($this, $this->configUserStore);
                 }
@@ -385,7 +406,17 @@ class AuthOne
     }
 
     /**
-     * It creates a new authentication. The result depends on the type of authentication.
+     * It creates a new authentication. The result depends on the type of authentication.<br>
+     * <b>Example:</b><br>
+     * <pre>
+     * $auth=$this->createAuth('john','abc123');
+     * </pre>
+     * <ul>
+     * <li><b>jwtlite:</b> It returns an array of the type ['body'=>'..','token'=>'..']</li>
+     * <li><b>session:</b> It returns the session id (string)</li>
+     * <li><b>token:</b> It returns the token generated (string)</li>
+     * <li><b>userpwd:</b> It returns the database user (associative array)</li>
+     * </ul>
      * @param string $user     the user
      * @param string $password the password
      * @param int    $ttl      the duration of the authentication (in seconds).
@@ -423,11 +454,18 @@ class AuthOne
     }
 
     /**
-     * It validates some authentication. It returns an associative array if succes or null if error.
+     * It validates some authentication. It returns an associative array if success or null if error.<br>
+     * <b>Example:</b><br>
+     * <pre>
+     * $this->validateAuth($sesid['body'],$sesid['token']); // jwtlite, where the body contains the payload
+     * $this->validateAuth($user,$password); // userpwd, where user is the username, and password is the password
+     * $this->validateAuth($token); // token, where token is a string.
+     * $this->validateAuth($session); // session, where session is a string.
+     * </pre>
      * @param mixed       $auth          the authentication
      * @param string|null $PasswordOrCrc the password or crc to validate the authentication<br>
      *                                   it is only required for some type of authentication
-     * @return array|null                The userobject or null if the validation fails
+     * @return array|null                The "userobject" or null if the validation fails
      * @throws Exception
      */
     public function validateAuth($auth, ?string $PasswordOrCrc = null): ?array

@@ -26,7 +26,7 @@ class ServiceAuthOneStorePdo implements IServiceAuthOneStore
         @session_start();
         $this->parent = $parent;
         if ($config === null) {
-            $this->pdo = PdoOne::instance(true);
+            $this->pdo = PdoOne::instance();
         } else {
             if (PHP_MAJOR_VERSION >= 8) {
                 $this->pdo = new PdoOne(...$config);
