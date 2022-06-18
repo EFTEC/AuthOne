@@ -23,11 +23,11 @@ use RuntimeException;
  * @package       eftec
  * @author        Jorge Castro Castillo
  * @copyright (c) Jorge Castro C. Dual Licence: LGPL and Commercial License  https://github.com/EFTEC/AuthOne
- * @version       1.0
+ * @version       1.1
  */
 class AuthOne
 {
-    public const VERSION = "1.0";
+    public const VERSION = "1.1";
     /**
      * @var int The max lenght of the user, password, token (no token bearer), it helps to avoid overflow<br>
      *          The field "enabled" is always up to 32 characters.
@@ -64,7 +64,7 @@ class AuthOne
      * @var string[] The configuration to fetch values [userfield=>type,passwordfield=>type,bodyfield=>type<br>
      *               The allowed types are: get,post,cookie,request,body,header or all (it tries all the methods).
      */
-    public $fetchConfig = ['user' => 'all', 'password' => 'all', 'token' => 'all','tokencrc'=>'all'];
+    public $fetchConfig = ['user' => 'all', 'password' => 'all', 'token' => 'all', 'tokencrc' => 'all'];
 
     public $configUserStore;
     public $configTokenStore;
@@ -76,7 +76,8 @@ class AuthOne
      * $this->redisConfig = [
      *           'type' => 'redis', // it will use redis to store the temporary tokens.
      *                              // Values allowed: auto (automatic),redis (redis) ,
-     *                              //memcache (memcache),apcu (PHP APCU),pdoone (database) and documentone (file system)
+     *                              //memcache (memcache),apcu (PHP APCU),pdoone (database) and documentone (file
+     *                              system)
      *           'server' => '127.0.0.1',  // the server of REDIS or PDO. For documentone it is the startup folder.
      *           'schema' => '', // (optional), the schema or folder.
      *           'port' => 0, // (optional) the port, used by redis memcache or pdo
@@ -139,9 +140,9 @@ class AuthOne
                     throw new RuntimeException('AuthOne: Library eftec\\PdoOne not found or not loaded.
                     Did you add it to the composer? composer add eftec\\pdoone');
                 }
-                if($this->configUserStore===null) {
+                if ($this->configUserStore === null) {
                     // auto wire the instance
-                    $this->serviceUserStore = \eftec\PdoOne::instance();
+                    $this->serviceUserStore = new ServiceAuthOneStorePdo($this, null);
                 } else {
                     $this->serviceUserStore = new ServiceAuthOneStorePdo($this, $this->configUserStore);
                 }
@@ -152,17 +153,17 @@ class AuthOne
                     throw new RuntimeException('AuthOne: Library eftec\\DocumentStoreOne not found or not loaded.
                      Did you add it to the composer? composer add eftec\\documentstoreone');
                 }
-                if($this->configUserStore===null) {
+                if ($this->configUserStore === null) {
                     // auto wire the instance
-                    $this->serviceUserStore = \eftec\DocumentStoreOne\DocumentStoreOne::instance();
+                    $this->serviceUserStore = new ServiceAuthOneStoreDocument($this, null);
                 } else {
                     $this->serviceUserStore = new ServiceAuthOneStoreDocument($this, $this->configUserStore);
                 }
                 break;
             case 'token':
-                if($this->configUserStore===null) {
+                if ($this->configUserStore === null) {
                     // auto wire the instance
-                    $this->serviceUserStore =CacheOne::instance();
+                    $this->serviceUserStore = new ServiceAuthOneStoreToken($this, null);
                 } else {
                     $this->serviceUserStore = new ServiceAuthOneStoreToken($this, $this->configUserStore);
                 }
@@ -299,7 +300,7 @@ class AuthOne
     public function basicValidateObject(?array $userObj): bool
     {
         $valid = true;
-        if($userObj===null) {
+        if ($userObj === null) {
             // no object
             return false;
         }
@@ -446,7 +447,7 @@ class AuthOne
      */
     public function createAuthFetch(int $ttl = 0)
     {
-        [$u, $p] = $this->fetch(null,true);
+        [$u, $p] = $this->fetch(null, true);
         if ($u === null || $p === null) {
             return null;
         }
@@ -636,17 +637,17 @@ class AuthOne
 
     /**
      * Fetch and returns the user, password, token and token crc (if any) using the configuration in $this->fetchConfig
-     * @param array|null $config see fetConfig();
+     * @param array|null $config        see fetConfig();
      * @param bool       $alwaysUserPwd if true then it always fetches the user and passowrd.
      * @return array [user/token,password/validator,body]
      * @see \eftec\authone\AuthOne::fetchConfig
      */
-    public function fetch($config = null, $alwaysUserPwd=false): array
+    public function fetch($config = null, $alwaysUserPwd = false): array
     {
         $this->fetchConfig = $config ?? $this->fetchConfig;
         $fc = array_keys($this->fetchConfig);
         $fv = array_values($this->fetchConfig);
-        if($this->authType==='userpwd' || $alwaysUserPwd) {
+        if ($this->authType === 'userpwd' || $alwaysUserPwd) {
             return [
                 $this->fetchValue($fc[0], $fv[0]), // user
                 $this->fetchValue($fc[1], $fv[1]) // password
@@ -692,7 +693,7 @@ class AuthOne
                 }
                 return $c;
             default:
-                throw new RuntimeException('unknown fetch type [' . $type.']');
+                throw new RuntimeException('unknown fetch type [' . $type . ']');
         }
     }
 }

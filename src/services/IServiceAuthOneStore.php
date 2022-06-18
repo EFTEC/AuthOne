@@ -1,14 +1,13 @@
 <?php
 
 namespace eftec\authone\services;
-
 /**
  * @copyright (c) Jorge Castro C. Dual Licence: LGPL and Commercial License  https://github.com/EFTEC/AuthOne
  * @version       1.0
  */
 interface IServiceAuthOneStore
 {
-    public function getInstance() : object;
+    public function getInstance(): object;
 
     /**
      * It adds a new object to the persistence layer.
@@ -51,7 +50,7 @@ interface IServiceAuthOneStore
 
     /**
      * It validates a user.
-     * @param string      $user The user to validate
+     * @param string      $user                 The user to validate
      * @param string|null $passwordNotEncrypted The password to validate.<br>
      *                                          This password must not be encrypted
      * @return array|null

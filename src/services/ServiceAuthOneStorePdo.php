@@ -17,10 +17,12 @@ class ServiceAuthOneStorePdo implements IServiceAuthOneStore
     protected $parent;
     /** @var PdoOne */
     protected $pdo;
+
     public function getInstance(): object
     {
         return $this->pdo;
     }
+
     public function __construct($parent, $config)
     {
         @session_start();
