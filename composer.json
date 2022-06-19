@@ -5,7 +5,8 @@
   "require": {
     "php": ">=7.2.5",
     "ext-json": "*",
-    "eftec/cacheone": "^2.12"
+    "eftec/cacheone": "^2.12",
+    "ext-openssl": "*"
   },
   "require-dev": {
     "eftec/pdoone": "^3.1",

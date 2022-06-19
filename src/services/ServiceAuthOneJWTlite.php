@@ -30,9 +30,9 @@ class ServiceAuthOneJWTlite implements IServiceAuthOne
             // user or password incorrect
             return null;
         }
+        unset($userObj[$this->parent->fieldPassword]);
         // 1'447'434'235 time() is a 10 digit value.
         // the token consits of the serialized value and the last 9 values are the ttl.
-        /** @noinspection PhpConditionAlreadyCheckedInspection */
         $userObjStr = is_string($userObj) ? $userObj : json_encode($userObj);
         $duration = $ttl === 0 ? 1000000000 : time() + $ttl;
         $newToken = $this->parent->hash($userObjStr . $duration);
@@ -47,6 +47,7 @@ class ServiceAuthOneJWTlite implements IServiceAuthOne
         try {
             if (strlen($passwordOrCRC) !== 74) {
                 // incorrect password
+                $this->parent->failCause='jwtlite: incorrect password';
                 return null;
             }
             // structure of the crc:
@@ -56,13 +57,21 @@ class ServiceAuthOneJWTlite implements IServiceAuthOne
             $crc = substr($passwordOrCRC, 10);
             if ($time !== 1000000000 && $time < time()) {
                 // expired.
+                $this->parent->failCause='jwtlite: expired';
                 return null;
             }
             $checkToken = $this->parent->hash($auth . $time);
             // $passwordOrCRC = contains the token+timeout
-            return $crc === $checkToken ? $auth : null;
+            if($crc===$checkToken) {
+                $this->parent->failCause='';
+                return $auth;
+            }
+            $this->parent->failCause='jwtlite: crc error';
+            return null;
+
         } catch (Exception $ex) {
             // some error.
+            $this->parent->failCause='jwtlite: exception'.$ex->getMessage();
             return null;
         }
     }

@@ -25,22 +25,21 @@ $auth->initialize();
 try {
     $auth->addUser($newUser);
 } catch(Exception $ex) {
-    echo "This error is normal:<br>";
+    echo "This error is normal:<br><b>";
     var_dump($ex->getMessage());
-    echo "--end expected error--<br>\n";
+    echo "</b>--end expected error--<br>\n";
 }
 
 
 
 //var_dump($auth->serviceStore->getUser('admin'));
-$sesid=$auth->createAuth('admin','abc.123',0,false);
+$sesid=$auth->createAuth('admin','abc.123',0,'both');
 echo "<br>";
 echo "<pre>";
 var_dump($sesid);
 echo "</pre>";
 echo "<br>";
-echo "<b>body:</b> ".json_encode($sesid['body'])."<br>";
-echo "<b>token:</b> ".json_encode($sesid['token'])."<br>";
+echo "<b>bear:</b> ".$sesid[1]."<br>";
 
 //echo json_encode(['sessid'=>$sesid]);
 

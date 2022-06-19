@@ -1,4 +1,7 @@
-<?php /** @noinspection PhpFullyQualifiedNameUsageInspection */
+<?php /** @noinspection DuplicatedCode */
+/** @noinspection PhpFullyQualifiedNameUsageInspection */
+/** @noinspection EncryptionInitializationVectorRandomnessInspection */
+/** @noinspection CryptographicallySecureRandomnessInspection */
 
 namespace eftec\authone;
 
@@ -23,11 +26,13 @@ use RuntimeException;
  * @package       eftec
  * @author        Jorge Castro Castillo
  * @copyright (c) Jorge Castro C. Dual Licence: LGPL and Commercial License  https://github.com/EFTEC/AuthOne
- * @version       1.1
+ * @version       1.2
  */
 class AuthOne
 {
-    public const VERSION = "1.1";
+    public const VERSION = "1.2";
+    /** @var string It stores the last cause of error, or empty if not error */
+    public $failCause = '';
     /**
      * @var int The max lenght of the user, password, token (no token bearer), it helps to avoid overflow<br>
      *          The field "enabled" is always up to 32 characters.
@@ -52,8 +57,6 @@ class AuthOne
     public $fieldEnableValues = [1, 0];
     /** @var string[] it contains the definitions of the other columns of the UserObject */
     public $fieldOthers = [];
-    /** @var bool */
-    public $encEnabled = true;
     public $hashType = 'sha256';
     public $encSalt = '123'; // note: you must change this value
     /** @var string=['session','token','userpwd','jwtlite'][$i] */
@@ -68,6 +71,25 @@ class AuthOne
 
     public $configUserStore;
     public $configTokenStore;
+    /** @var bool */
+    public $encEnabled = true;
+    /**
+     * @var string Encryption password.<br>
+     * If the method is INTEGER, then the password must be an integer
+     */
+    public $encPassword = '';
+    /**
+     * @var bool If iv is true then it is generated randomly, otherwise is it generated via md5<br>
+     * If true, then the encrypted value is always different (but the decryption yields the same value).<br>
+     * If false, then the value encrypted is the same for the same value.<br>
+     * Set to false if you want a deterministic value (it always returns the same value)
+     */
+    public $iv = true;
+    /**
+     * @var string<p> Encryption method, example AES-256-CTR (two ways).</p>
+     * @see http://php.net/manual/en/function.openssl-get-cipher-methods.php
+     */
+    public $encMethod = 'AES-256-CTR';
 
     /**
      * It creates and configures the instance<br>
@@ -183,6 +205,46 @@ class AuthOne
         }
     }
 
+    /**
+     * It sets the parameters of encryption
+     * @param string $encPassword The password to encrypt/decrypt the information. Example "passw0rd"
+     * @param string $encSalt     The salt used to ensure the safety of the information. Example "92fdkdsfdgdsffsd"
+     * @param bool   $encEnable   If true (default) then the encryption is enabled. Otherwise, the values are not
+     *                            encrypted/decrypted
+     * @param string $encMethod   The method of encryption.
+     * @param bool   $iv          true if you want to use IV
+     * @return void
+     * @noinspection PhpUnused
+     */
+    public function setEncryptConfig($encPassword, $encSalt, $encEnable = true, $encMethod = 'AES-256-CTR', $iv = true): void
+    {
+        $this->iv = $iv;
+        $this->encEnabled = $encEnable;
+        $this->encSalt = $encSalt;
+        $this->encMethod = $encMethod;
+        $this->encPassword = $encPassword;
+    }
+
+    /**
+     * It sets the parameters of encryption using parameteres used in the instance of serviceUserStore<br>
+     * @return bool returns true if the parameters were set. False if not. ServiceUserStore must be an instance of
+     *              PdoOne
+     * @noinspection PhpUnused
+     */
+    public function setEncryptConfigUsingPDO(): bool
+    {
+        /** @var \eftec\PdoOne $instance */
+        $instance = $this->serviceUserStore->getInstance();
+        if ($instance instanceof \eftec\PdoOne) {
+            $this->iv = $instance->encryption->iv;
+            $this->encEnabled = $instance->encryption->encEnabled;
+            $this->encSalt = $instance->encryption->encSalt;
+            $this->encMethod = $instance->encryption->encMethod;
+            $this->encPassword = $instance->encryption->encPassword;
+            return true;
+        }
+        return false;
+    }
 
     /**
      * It specifies the values of persistence and token.
@@ -413,18 +475,23 @@ class AuthOne
      * $auth=$this->createAuth('john','abc123');
      * </pre>
      * <ul>
-     * <li><b>jwtlite:</b> It returns an array of the type ['body'=>'..','token'=>'..']</li>
-     * <li><b>session:</b> It returns the session id (string)</li>
-     * <li><b>token:</b> It returns the token generated (string)</li>
-     * <li><b>userpwd:</b> It returns the database user (associative array)</li>
+     * <li><b>jwtlite:</b> (auth) It returns an array of the type ['body'=>'..','token'=>'..']</li>
+     * <li><b>session:</b> (auth) It returns the session id (string)</li>
+     * <li><b>token:</b> (auth) It returns the token generated (string)</li>
+     * <li><b>userpwd:</b> (auth) It returns the database user (associative array)</li>
      * </ul>
-     * @param string $user     the user
-     * @param string $password the password
-     * @param int    $ttl      the duration of the authentication (in seconds).
+     * @param string $user        the user
+     * @param string $password    the password
+     * @param int    $ttl         the duration of the authentication (in seconds).<br>
+     *                            <b>userpwd</b> doesn't use this value
+     * @param string $returnValue =['auth','bear','both'][$i]<br>
+     *                            <b>auth:</b> (default) it returns the authentication.<br>
+     *                            <b>bear:</b> it returns the bearer (the auth encrypted)<br>
+     *                            <b>both:</b> It returns the auth and bearer in a array [auth,bear]
      * @return array|false|mixed|string|null
      * @throws Exception
      */
-    public function createAuth(string $user, string $password, int $ttl = 0)
+    public function createAuth(string $user, string $password, int $ttl = 0, string $returnValue = 'auth')
     {
         if (strlen($user) > $this->MAXLENGHT) {
             // user too big
@@ -434,7 +501,17 @@ class AuthOne
             // password too big
             return null;
         }
-        return $this->serviceAuth->createAuth($user, $password, $ttl);
+        $r = $this->serviceAuth->createAuth($user, $password, $ttl);
+        if (!$r) {
+            return $r;
+        }
+        if ($returnValue === 'bear') {
+            return $this->encrypt($r);
+        }
+        if ($returnValue === 'both') {
+            return [$r, $this->encrypt($r)];
+        }
+        return $r;
     }
 
     /**
@@ -462,22 +539,37 @@ class AuthOne
      * $this->validateAuth($user,$password); // userpwd, where user is the username, and password is the password
      * $this->validateAuth($token); // token, where token is a string.
      * $this->validateAuth($session); // session, where session is a string.
+     * $this->validateAuth($token,null,true); // use the token bearer as authentication.
      * </pre>
-     * @param mixed       $auth          the authentication
-     * @param string|null $PasswordOrCrc the password or crc to validate the authentication<br>
-     *                                   it is only required for some type of authentication
+     * @param mixed       $auth          the authentication, if $asBear=true, then it is the token bearer.
+     * @param string|null $PasswordOrCrc the password or crc to validate the authentication.<br>
+     *                                   It is only required for some type of authentication
+     * @param bool        $asBear        If true, then $auth is an encrypted token bearer.
      * @return array|null                The "userobject" or null if the validation fails
      * @throws Exception
      */
-    public function validateAuth($auth, ?string $PasswordOrCrc = null): ?array
+    public function validateAuth($auth, ?string $PasswordOrCrc = null,bool $asBear = false): ?array
     {
+        if ($asBear) {
+            $bear = $this->decrypt($auth);
+            if (!is_array($bear)) {
+                $this->failCause = 'AuthOne: unable to decrypt bearer';
+                return null;
+            }
+            if ($this->authType === 'jwtlite') {
+                $auth = @$bear['body'];
+                $PasswordOrCrc = @$bear['token'];
+            }
+        }
         $authString = is_string($auth) ? $auth : json_encode($auth);
         if ($this->authType === 'jwtlite' && strlen($authString) > $this->MAXLENGHTOBJECT) {
             // auth too big
+            $this->failCause = 'AuthOne: auth is too big';
             return null;
         }
         if ($this->authType !== 'jwtlite' && strlen($authString) > $this->MAXLENGHT) {
             // auth too big
+            $this->failCause = 'AuthOne: auth is too big';
             return null;
         }
         $r = $this->serviceAuth->validate($authString, $PasswordOrCrc);
@@ -584,6 +676,64 @@ class AuthOne
         }
         return hash($this->hashType, $this->encSalt . $data);
     }
+
+    /**
+     * It is a two-way decryption
+     * @param mixed $data
+     * @return bool|string
+     */
+    public function decrypt($data)
+    {
+        if (!$this->encEnabled || $data === null) {
+            return $data;
+        } // no encryption
+        $data = base64_decode(str_replace(array('-', '_'), array('+', '/'), $data));
+        $iv_strlen = 2 * openssl_cipher_iv_length($this->encMethod);
+        if (preg_match('/^(.{' . $iv_strlen . '})(.+)$/', $data, $regs)) {
+            try {
+                [, $iv, $crypted_string] = $regs;
+                $decrypted_string = openssl_decrypt($crypted_string, $this->encMethod, $this->encPassword, 0, hex2bin($iv));
+                $result = substr($decrypted_string, strlen($this->encSalt));
+                if (strlen($result) > 2 && $result[1] === ':') {
+                    /** @noinspection UnserializeExploitsInspection */
+                    $resultfinal = @unserialize($result); // we try to unserialize, if fails, then we keep the current value
+                    $result = $resultfinal === false ? $result : $resultfinal;
+                }
+                return $result;
+            } catch (Exception $ex) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * It is a two-way encryption. The result is htlml/link friendly.
+     * @param mixed $data For the method simple, it could be a simple value (string,int,etc.)<br>
+     *                    For the method integer, it must be an integer<br>
+     *                    For other methods, it could be any value. If it is an object or array, then it is
+     *                    serialized<br>
+     * @return string|int|false     Returns a string with the value encrypted
+     */
+    public function encrypt($data)
+    {
+        if (!$this->encEnabled) {
+            return $data;
+        } // no encryption
+        if (is_array($data) || is_object($data)) {
+            $data = serialize($data);
+        }
+        if ($this->iv) {
+            $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($this->encMethod));
+        } else {
+            $iv = substr(md5($data, true), 0, openssl_cipher_iv_length($this->encMethod));
+        }
+        $encrypted_string = bin2hex($iv) . openssl_encrypt($this->encSalt . $data, $this->encMethod
+                , $this->encPassword, 0, $iv);
+        return str_replace(array('+', '/'), array('-', '_'), base64_encode($encrypted_string));
+    }
+
 
     /**
      * It generates a token based in the user, password and the time<br>

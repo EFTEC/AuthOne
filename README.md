@@ -269,6 +269,10 @@ $tokenConfig=[ // it is required if you are using TOKEN.
 
 # Changelog
 
+* 1.1 2022-06-19 
+  * Added token bearer for createAuth() and validateAuth(). 
+  * Added parameters of encryption.
+  * The password of the userobject is removed (JWTLITE)
 * 1.01 2022-06-17 fixed a bug when it tries to inject the instance.
 * 1.00 2022-06-12 release version.
 * 0.92 2022-03-22 Changed dependencies, now PdoOne and DocumentStoreOne are optional dependencies.
