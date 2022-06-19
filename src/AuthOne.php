@@ -26,13 +26,13 @@ use RuntimeException;
  * @package       eftec
  * @author        Jorge Castro Castillo
  * @copyright (c) Jorge Castro C. Dual Licence: LGPL and Commercial License  https://github.com/EFTEC/AuthOne
- * @version       1.2
+ * @version       1.3
  */
 class AuthOne
 {
-    public const VERSION = "1.2";
-    /** @var string It stores the last cause of error, or empty if not error */
-    public $failCause = '';
+    public const VERSION = "1.3";
+    /** @var array It stores the last cause of error, or empty if not error */
+    public $failCause = [];
     /**
      * @var int The max lenght of the user, password, token (no token bearer), it helps to avoid overflow<br>
      *          The field "enabled" is always up to 32 characters.
@@ -493,6 +493,7 @@ class AuthOne
      */
     public function createAuth(string $user, string $password, int $ttl = 0, string $returnValue = 'auth')
     {
+        $this->failCause=[];
         if (strlen($user) > $this->MAXLENGHT) {
             // user too big
             return null;
@@ -505,6 +506,7 @@ class AuthOne
         if (!$r) {
             return $r;
         }
+
         if ($returnValue === 'bear') {
             return $this->encrypt($r);
         }
@@ -550,10 +552,11 @@ class AuthOne
      */
     public function validateAuth($auth, ?string $PasswordOrCrc = null,bool $asBear = false): ?array
     {
+        $this->failCause=[];
         if ($asBear) {
             $bear = $this->decrypt($auth);
             if (!is_array($bear)) {
-                $this->failCause = 'AuthOne: unable to decrypt bearer';
+                $this->failCause[] = 'AuthOne: unable to decrypt bearer';
                 return null;
             }
             if ($this->authType === 'jwtlite') {
@@ -564,12 +567,12 @@ class AuthOne
         $authString = is_string($auth) ? $auth : json_encode($auth);
         if ($this->authType === 'jwtlite' && strlen($authString) > $this->MAXLENGHTOBJECT) {
             // auth too big
-            $this->failCause = 'AuthOne: auth is too big';
+            $this->failCause[] = 'AuthOne: auth is too big';
             return null;
         }
         if ($this->authType !== 'jwtlite' && strlen($authString) > $this->MAXLENGHT) {
             // auth too big
-            $this->failCause = 'AuthOne: auth is too big';
+            $this->failCause[] = 'AuthOne: auth is too big';
             return null;
         }
         $r = $this->serviceAuth->validate($authString, $PasswordOrCrc);
@@ -603,6 +606,7 @@ class AuthOne
      */
     public function renewAuth($auth, ?string $PasswordOrCrc = null, int $ttl = 0): ?array
     {
+        $this->failCause=[];
         $authString = is_string($auth) ? $auth : json_encode($auth);
         if ($this->authType === 'jwtlite' && strlen($authString) > $this->MAXLENGHTOBJECT) {
             // auth too big
@@ -635,6 +639,7 @@ class AuthOne
      */
     public function invalidateAuth(string $auth): bool
     {
+        $this->failCause=[];
         if ($this->authType === 'jwtlite' && strlen($auth) > $this->MAXLENGHTOBJECT) {
             // auth too big
             return false;

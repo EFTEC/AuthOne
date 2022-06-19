@@ -98,7 +98,11 @@ class ServiceAuthOneStorePdo implements IServiceAuthOneStore
         } catch (Exception $ex) {
             throw new RuntimeException('AuthOne: ' . $ex->getMessage());
         }
-        return $userObj === false ? null : $userObj;
+        if ($userObj === false) {
+            $this->parent->failCause[]='Unable to get user using PDO';
+            return null;
+        }
+        return $userObj;
     }
 
     /**
@@ -153,6 +157,8 @@ class ServiceAuthOneStorePdo implements IServiceAuthOneStore
                     $this->parent->fieldUser => $user,
                     $this->parent->fieldPassword => $this->parent->hash($passwordNotEncrypted)
                 ]);
+
+
             if ($this->parent->fieldEnable) {
                 $query = $query->where([$this->parent->fieldEnable => $this->parent->fieldEnableValues[0]]);
             }

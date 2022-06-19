@@ -25,7 +25,11 @@ class ServiceAuthOneUserPwd implements IServiceAuthOne
     public function createAuth(string $user, ?string $password = null, int $ttl = 0)
     {
         $userObj = $this->parent->validateUser($user, $password);
-        return $userObj ?? null;
+        if(!$userObj) {
+            $this->parent->failCause[] = 'user or password incorrect';
+            return null;
+        }
+        return $userObj;
     }
 
     /**

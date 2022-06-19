@@ -269,6 +269,8 @@ $tokenConfig=[ // it is required if you are using TOKEN.
 
 # Changelog
 
+* 1.3 2022-06-19
+  * Added field failcause where you can find the log of the error in validations 
 * 1.2 2022-06-19 
   * Added token bearer for createAuth() and validateAuth(). 
   * Added parameters of encryption.

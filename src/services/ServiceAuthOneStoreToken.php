@@ -47,7 +47,11 @@ class ServiceAuthOneStoreToken implements IServiceAuthOneStore
             $r[$this->parent->fieldPassword] = $this->parent->hash($userObj[$this->parent->fieldPassword]);
             $idDoc = $userObj[$this->parent->fieldUser];
             $result = $this->cache->set('', $idDoc, $r, 0);
-            return ($result === false) ? null : $r;
+            if (($result === false)) {
+                $this->parent->failCause[]='Unable to add user in Store Token';
+                return null;
+            }
+            return $r;
         } catch (Exception $ex) {
             throw new RuntimeException('AuthOne: ' . $ex->getMessage());
         }
@@ -94,7 +98,11 @@ class ServiceAuthOneStoreToken implements IServiceAuthOneStore
         } catch (Exception $ex) {
             throw new RuntimeException('AuthOne: ' . $ex->getMessage());
         }
-        return $userObj === false ? null : $userObj;
+        if ($userObj === false) {
+            $this->parent->failCause[]='unable to get user in the cache';
+            return null;
+        }
+        return $userObj;
     }
 
     /**
@@ -128,16 +136,22 @@ class ServiceAuthOneStoreToken implements IServiceAuthOneStore
             $doc = $this->cache->get('', $user, null);
             if ($doc[$this->parent->fieldPassword] !== $this->parent->hash($passwordNotEncrypted)) {
                 // password incrrect
+                $this->parent->failCause[]='User or password incorrect';
                 return null;
             }
             if ($this->parent->fieldEnable && $doc[$this->parent->fieldEnable] !== $this->parent->fieldEnableValues[0]) {
                 // user not enable
+                $this->parent->failCause[]='User not enabled';
                 return null;
             }
             $userObj = $doc;
         } catch (Exception $ex) {
             throw new RuntimeException('AuthOne: ' . $ex->getMessage());
         }
-        return $userObj === false ? null : $userObj;
+        if ($userObj === false) {
+            $this->parent->failCause[]='Unable to validate user in Store Token';
+            return null;
+        }
+        return $userObj;
     }
 }

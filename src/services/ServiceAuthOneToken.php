@@ -27,6 +27,7 @@ class ServiceAuthOneToken implements IServiceAuthOne
         $userObj = $this->parent->validateUser($user, $password);
         if ($userObj === null) {
             // user or password incorrect
+            $this->parent->failCause[]='user or password incorrect';
             return null;
         }
         $newToken = $this->parent->genToken($user, $password);

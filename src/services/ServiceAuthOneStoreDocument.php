@@ -92,7 +92,11 @@ class ServiceAuthOneStoreDocument implements IServiceAuthOneStore
         } catch (Exception $ex) {
             throw new RuntimeException('AuthOne: ' . $ex->getMessage());
         }
-        return $userObj === false ? null : $userObj;
+        if ($userObj === false) {
+            $this->parent->failCause[]='Unable to get user';
+            return null;
+        }
+        return $userObj;
     }
 
     /**
@@ -143,10 +147,12 @@ class ServiceAuthOneStoreDocument implements IServiceAuthOneStore
             $doc = $this->document->get($user);
             if ($doc[$this->parent->fieldPassword] !== $this->parent->hash($passwordNotEncrypted)) {
                 // password incrrect
+                $this->parent->failCause[]='user or password incorrect';
                 return null;
             }
             if ($this->parent->fieldEnable && $doc[$this->parent->fieldEnable] !== $this->parent->fieldEnableValues[0]) {
                 // user not enable
+                $this->parent->failCause[]='user not enabled';
                 return null;
             }
             $userObj = $doc;

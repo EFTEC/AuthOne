@@ -29,6 +29,7 @@ class ServiceAuthOneSession implements IServiceAuthOne
         $userObj = $this->parent->validateUser($user, $password);
         if ($userObj === null) {
             // user or password incorrect
+            $this->parent->failCause[]='user or password incorrect';
             return null;
         }
         @session_write_close();
@@ -56,7 +57,11 @@ class ServiceAuthOneSession implements IServiceAuthOne
         } elseif ($_SESSION['AuthOne_ttl'] > 100 && $_SESSION['AuthOne_ttl'] < time()) {
             $valid = false;
         }
-        return $valid === false ? null : $valid;
+        if ($valid === false) {
+            $this->parent->failCause[]='Unable to validate user or session not found';
+            return null;
+        }
+        return $valid;
     }
 
     /**

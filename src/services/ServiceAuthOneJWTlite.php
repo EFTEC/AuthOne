@@ -27,6 +27,7 @@ class ServiceAuthOneJWTlite implements IServiceAuthOne
     {
         $userObj = $this->parent->validateUser($user, $password);
         if ($userObj === null) {
+            $this->parent->failCause[]='user or password incorrect';
             // user or password incorrect
             return null;
         }
@@ -47,7 +48,7 @@ class ServiceAuthOneJWTlite implements IServiceAuthOne
         try {
             if (strlen($passwordOrCRC) !== 74) {
                 // incorrect password
-                $this->parent->failCause='jwtlite: incorrect password';
+                $this->parent->failCause[]='jwtlite: incorrect password';
                 return null;
             }
             // structure of the crc:
@@ -57,21 +58,22 @@ class ServiceAuthOneJWTlite implements IServiceAuthOne
             $crc = substr($passwordOrCRC, 10);
             if ($time !== 1000000000 && $time < time()) {
                 // expired.
-                $this->parent->failCause='jwtlite: expired';
+                $this->parent->failCause[]='jwtlite: expired';
                 return null;
             }
             $checkToken = $this->parent->hash($auth . $time);
             // $passwordOrCRC = contains the token+timeout
             if($crc===$checkToken) {
-                $this->parent->failCause='';
+                // ok
+                $this->parent->failCause=[];
                 return $auth;
             }
-            $this->parent->failCause='jwtlite: crc error';
+            $this->parent->failCause[]='jwtlite: crc error';
             return null;
 
         } catch (Exception $ex) {
             // some error.
-            $this->parent->failCause='jwtlite: exception'.$ex->getMessage();
+            $this->parent->failCause[]='jwtlite: exception'.$ex->getMessage();
             return null;
         }
     }
