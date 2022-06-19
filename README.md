@@ -269,7 +269,7 @@ $tokenConfig=[ // it is required if you are using TOKEN.
 
 # Changelog
 
-* 1.1 2022-06-19 
+* 1.2 2022-06-19 
   * Added token bearer for createAuth() and validateAuth(). 
   * Added parameters of encryption.
   * The password of the userobject is removed (JWTLITE)
