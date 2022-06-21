@@ -269,6 +269,10 @@ $tokenConfig=[ // it is required if you are using TOKEN.
 
 # Changelog
 
+* 1.4 2022-06-21
+  * Added method createAuthObj()
+  * Fixed method createAuth.
+  * Fixed method validateAuth.
 * 1.3 2022-06-19
   * Added field failcause where you can find the log of the error in validations 
 * 1.2 2022-06-19 

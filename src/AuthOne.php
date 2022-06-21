@@ -1,4 +1,5 @@
-<?php /** @noinspection DuplicatedCode */
+<?php /** @noinspection PhpUnused */
+/** @noinspection DuplicatedCode */
 /** @noinspection PhpFullyQualifiedNameUsageInspection */
 /** @noinspection EncryptionInitializationVectorRandomnessInspection */
 /** @noinspection CryptographicallySecureRandomnessInspection */
@@ -480,26 +481,33 @@ class AuthOne
      * <li><b>token:</b> (auth) It returns the token generated (string)</li>
      * <li><b>userpwd:</b> (auth) It returns the database user (associative array)</li>
      * </ul>
-     * @param string $user        the user
-     * @param string $password    the password
-     * @param int    $ttl         the duration of the authentication (in seconds).<br>
-     *                            <b>userpwd</b> doesn't use this value
-     * @param string $returnValue =['auth','bear','both'][$i]<br>
-     *                            <b>auth:</b> (default) it returns the authentication.<br>
-     *                            <b>bear:</b> it returns the bearer (the auth encrypted)<br>
-     *                            <b>both:</b> It returns the auth and bearer in a array [auth,bear]
+     * @param string|null $user        The username
+     * @param string|null $password    the password
+     * @param int         $ttl         the duration of the authentication (in seconds).<br>
+     *                                 <b>userpwd</b> doesn't use this value
+     * @param string      $returnValue =['auth','bear','both'][$i]<br>
+     *                                 <b>auth:</b> (default) it returns the authentication.<br>
+     *                                 <b>bear:</b> it returns the bearer (the auth encrypted)<br>
+     *                                 <b>both:</b> It returns the auth and bearer in a array [auth,bear]
      * @return array|false|mixed|string|null
      * @throws Exception
      */
-    public function createAuth(string $user, string $password, int $ttl = 0, string $returnValue = 'auth')
+    public function createAuth(?string $user, ?string $password, int $ttl = 0, string $returnValue = 'auth')
     {
         $this->failCause=[];
+        if($user===null || $password===null) {
+            // no user or password.
+            $this->failCause[]='No username or password';
+            return null;
+        }
         if (strlen($user) > $this->MAXLENGHT) {
             // user too big
+            $this->failCause[]='Username too big';
             return null;
         }
         if (strlen($password) > $this->MAXLENGHT) {
             // password too big
+            $this->failCause[]='Password too big';
             return null;
         }
         $r = $this->serviceAuth->createAuth($user, $password, $ttl);
@@ -514,6 +522,36 @@ class AuthOne
             return [$r, $this->encrypt($r)];
         }
         return $r;
+    }
+
+    /**
+     * It creates a new authentication. The result depends on the type of authentication.<br>
+     * <b>Example:</b><br>
+     * <pre>
+     * $auth=$this->createAuth(['usr=>'john','pwd'=>'abc123']);
+     * </pre>
+     * <ul>
+     * <li><b>jwtlite:</b> (auth) It returns an array of the type ['body'=>'..','token'=>'..']</li>
+     * <li><b>session:</b> (auth) It returns the session id (string)</li>
+     * <li><b>token:</b> (auth) It returns the token generated (string)</li>
+     * <li><b>userpwd:</b> (auth) It returns the database user (associative array)</li>
+     * </ul>
+     * @param array|null $userobj      The user-object to validate.<br>
+     *                                 The fields are read from $this->fieldUser and $this->fieldPassword<br>
+     *                                 You can set those fields using the method $this->setUserStoreConfig()
+     * @param int         $ttl         the duration of the authentication (in seconds).<br>
+     *                                 <b>userpwd</b> doesn't use this value
+     * @param string      $returnValue =['auth','bear','both'][$i]<br>
+     *                                 <b>auth:</b> (default) it returns the authentication.<br>
+     *                                 <b>bear:</b> it returns the bearer (the auth encrypted)<br>
+     *                                 <b>both:</b> It returns the auth and bearer in a array [auth,bear]
+     * @return array|false|mixed|string|null
+     * @throws Exception
+     */
+    public function createAuthObj(?array $userobj, int $ttl = 0, string $returnValue = 'auth') {
+        $user=$userobj[$this->fieldUser]??null;
+        $password=$userobj[$this->fieldPassword]??null;
+        return $this->createAuth($user,$password,$ttl,$returnValue);
     }
 
     /**
@@ -544,13 +582,13 @@ class AuthOne
      * $this->validateAuth($token,null,true); // use the token bearer as authentication.
      * </pre>
      * @param mixed       $auth          the authentication, if $asBear=true, then it is the token bearer.
-     * @param string|null $PasswordOrCrc the password or crc to validate the authentication.<br>
+     * @param string|null $passwordOrCrc the password or crc to validate the authentication.<br>
      *                                   It is only required for some type of authentication
      * @param bool        $asBear        If true, then $auth is an encrypted token bearer.
      * @return array|null                The "userobject" or null if the validation fails
      * @throws Exception
      */
-    public function validateAuth($auth, ?string $PasswordOrCrc = null,bool $asBear = false): ?array
+    public function validateAuth($auth, ?string $passwordOrCrc = null, bool $asBear = false): ?array
     {
         $this->failCause=[];
         if ($asBear) {
@@ -560,8 +598,12 @@ class AuthOne
                 return null;
             }
             if ($this->authType === 'jwtlite') {
-                $auth = @$bear['body'];
-                $PasswordOrCrc = @$bear['token'];
+                $auth = $bear['body']??null;
+                $passwordOrCrc = $bear['token']??null;
+                if($auth===null || $passwordOrCrc===null) {
+                    $this->failCause[] = 'AuthOne: no body or token stored in the bearer';
+                    return null;
+                }
             }
         }
         $authString = is_string($auth) ? $auth : json_encode($auth);
@@ -575,7 +617,7 @@ class AuthOne
             $this->failCause[] = 'AuthOne: auth is too big';
             return null;
         }
-        $r = $this->serviceAuth->validate($authString, $PasswordOrCrc);
+        $r = $this->serviceAuth->validate($authString, $passwordOrCrc);
         if (is_string($r)) {
             return json_decode($r, true);
         }
